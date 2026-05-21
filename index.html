@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPA Compass — Semester Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0f1a;
+    --surface: #141826;
+    --surface2: #1c2235;
+    --border: #2a3050;
+    --accent: #6ee7b7;
+    --accent2: #818cf8;
+    --accent3: #fb923c;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+    --danger: #f87171;
+    --gold: #fbbf24;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(110,231,183,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(110,231,183,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb1 { width: 500px; height: 500px; background: rgba(110,231,183,0.06); top: -200px; right: -100px; }
+  .orb2 { width: 400px; height: 400px; background: rgba(129,140,248,0.05); bottom: 100px; left: -150px; }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 56px;
+    animation: fadeUp 0.7s ease both;
+  }
+
+  .header-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid rgba(110,231,183,0.3);
+    padding: 5px 14px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    line-height: 1.1;
+    background: linear-gradient(135deg, #e2e8f0 0%, #6ee7b7 60%, #818cf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+  }
+
+  .header p {
+    color: var(--text-dim);
+    font-size: 1.05rem;
+    font-weight: 300;
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* Stats Bar */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.7s 0.1s ease both;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .stat-card:hover { border-color: var(--accent2); }
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(110,231,183,0.03), transparent);
+    pointer-events: none;
+  }
+
+  .stat-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+    margin-bottom: 6px;
+    transition: color 0.3s;
+  }
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 500;
+  }
+
+  /* Subject Cards */
+  .section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .subjects-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 32px;
+    animation: fadeUp 0.7s 0.15s ease both;
+  }
+
+  .subject-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: border-color 0.2s, transform 0.2s;
+    animation: slideIn 0.4s ease both;
+  }
+  .subject-card:hover { border-color: rgba(110,231,183,0.3); }
+
+  .subject-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .subject-number {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    background: var(--surface2);
+    padding: 4px 10px;
+    border-radius: 100px;
+    letter-spacing: 1px;
+  }
+
+  .remove-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .remove-btn:hover { border-color: var(--danger); color: var(--danger); background: rgba(248,113,113,0.1); }
+
+  .subject-fields {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .field-group { display: flex; flex-direction: column; gap: 8px; }
+
+  label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+
+  input[type="text"], input[type="number"], select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    padding: 11px 14px;
+    width: 100%;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(110,231,183,0.12);
+  }
+  input::placeholder { color: var(--text-muted); }
+  select option { background: var(--surface2); }
+
+  /* Grade choices */
+  .grade-choices-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .choices-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    background: rgba(129,140,248,0.15);
+    color: var(--accent2);
+    padding: 2px 8px;
+    border-radius: 100px;
+  }
+
+  .grade-choices {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .choice-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .choice-item:focus-within { border-color: var(--accent2); }
+
+  .choice-item label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .choice-item input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    padding: 4px 0;
+    font-size: 1.05rem;
+    font-family: 'DM Mono', monospace;
+    color: var(--accent2);
+    font-weight: 500;
+  }
+  .choice-item input:focus { box-shadow: none; border-color: var(--accent2); }
+
+  /* Buttons */
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+    animation: fadeUp 0.7s 0.2s ease both;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 24px;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #34d399);
+    color: #0c1a12;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(110,231,183,0.3); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+  .btn-secondary:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .btn-danger {
+    background: rgba(248,113,113,0.1);
+    border: 1px solid rgba(248,113,113,0.3);
+    color: var(--danger);
+  }
+  .btn-danger:hover { background: rgba(248,113,113,0.2); }
+
+  .btn-calculate {
+    background: linear-gradient(135deg, var(--accent2), #6366f1);
+    color: white;
+    font-size: 1rem;
+    padding: 15px 36px;
+    flex: 1;
+  }
+  .btn-calculate:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(129,140,248,0.35); }
+
+  /* Results */
+  .results-section {
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .results-header h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.7rem;
+    color: var(--text);
+  }
+  .results-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    background: rgba(110,231,183,0.15);
+    color: var(--accent);
+    padding: 4px 12px;
+    border-radius: 100px;
+  }
+
+  .possibilities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .possibility-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.4s ease both;
+  }
+  .possibility-card:hover { border-color: var(--accent2); transform: translateY(-3px); box-shadow: 0 12px 35px rgba(0,0,0,0.3); }
+  .possibility-card.best { border-color: rgba(110,231,183,0.5); }
+  .possibility-card.best::before {
+    content: 'BEST CASE';
+    position: absolute; top: 14px; right: 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 1.5px;
+    background: rgba(110,231,183,0.15);
+    color: var(--accent);
+    padding: 3px 8px;
+    border-radius: 100px;
+  }
+  .possibility-card.worst { border-color: rgba(248,113,113,0.3); }
+  .possibility-card.worst::before {
+    content: 'WORST CASE';
+    position: absolute; top: 14px; right: 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 1.5px;
+    background: rgba(248,113,113,0.1);
+    color: var(--danger);
+    padding: 3px 8px;
+    border-radius: 100px;
+  }
+
+  .possibility-gpa {
+    font-family: 'DM Serif Display', serif;
+    font-size: 3rem;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .possibility-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+
+  .possibility-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-row .subj-name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .breakdown-row .grade-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+
+  /* GPA color coding */
+  .gpa-s { color: #6ee7b7; }   /* 10: Outstanding */
+  .gpa-a { color: #34d399; }   /* 9: Excellent */
+  .gpa-b { color: #818cf8; }   /* 7-8: Good/Very Good */
+  .gpa-c { color: #fb923c; }   /* 6: Above Average */
+  .gpa-d { color: #fbbf24; }   /* 5: Pass */
+  .gpa-f { color: #f87171; }   /* <5: Fail */
+
+  /* Target GPA section */
+  .target-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 32px;
+    animation: fadeUp 0.7s 0.25s ease both;
+  }
+
+  .target-section h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+    margin-bottom: 16px;
+    color: var(--text-dim);
+  }
+
+  .target-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .target-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .target-input-wrap input {
+    max-width: 120px;
+    font-family: 'DM Mono', monospace;
+    font-size: 1.1rem;
+    color: var(--gold);
+  }
+
+  .target-indicator {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+  }
+  .target-indicator.met { color: var(--accent); }
+  .target-indicator.not-met { color: var(--danger); }
+
+  /* Progress bar */
+  .gpa-progress {
+    margin-top: 16px;
+  }
+  .progress-bar-wrap {
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 100px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    transition: width 0.6s cubic-bezier(.23,1,.32,1);
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+  }
+
+  /* Summary card */
+  .summary-card {
+    background: linear-gradient(135deg, rgba(110,231,183,0.08), rgba(129,140,248,0.08));
+    border: 1px solid rgba(110,231,183,0.2);
+    border-radius: var(--radius);
+    padding: 28px;
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .summary-card .big-gpa {
+    font-family: 'DM Serif Display', serif;
+    font-size: 5rem;
+    line-height: 1;
+    display: block;
+    margin-bottom: 8px;
+  }
+  .summary-card .gpa-grade-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .summary-range {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .range-item { font-size: 0.85rem; color: var(--text-muted); }
+  .range-item span { display: block; font-family: 'DM Mono', monospace; font-size: 1.1rem; color: var(--text); margin-top: 2px; }
+
+  /* Hidden */
+  .hidden { display: none !important; }
+
+  /* Tooltip */
+  .tooltip {
+    position: relative;
+  }
+  .tooltip::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 0.78rem;
+    padding: 6px 12px;
+    border-radius: 6px;
+    white-space: nowrap;
+    border: 1px solid var(--border);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .tooltip:hover::after { opacity: 1; }
+
+  /* Grade scale */
+  .grade-scale {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.7s 0.3s ease both;
+  }
+  .grade-scale h3 {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+  .scale-items {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .scale-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+  }
+  .scale-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .subject-fields { grid-template-columns: 1fr; }
+    .grade-choices { grid-template-columns: repeat(3, 1fr); }
+    .stats-bar { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .stat-card { padding: 14px 10px; }
+    .stat-value { font-size: 1.5rem; }
+    .possibilities-grid { grid-template-columns: 1fr; }
+    .btn-row { flex-direction: column; }
+    .btn-calculate { text-align: center; justify-content: center; }
+  }
+
+  /* Export toast */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: 0.85rem;
+    font-family: 'DM Mono', monospace;
+    padding: 12px 24px;
+    border-radius: 100px;
+    transition: transform 0.3s ease;
+    z-index: 100;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+</style>
+</head>
+<body>
+
+<div class="glow-orb orb1"></div>
+<div class="glow-orb orb2"></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-tag">✦ Semester GPA Planner</div>
+    <h1>GPA Compass</h1>
+    <p>Enter your expected grades (up to 3 choices per subject) and credits. We'll map every possible GPA outcome for your semester.</p>
+  </div>
+
+  <!-- Live Stats -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <span class="stat-value" id="stat-subjects">0</span>
+      <div class="stat-label">Subjects</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value" id="stat-credits">0</span>
+      <div class="stat-label">Total Credits</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value" id="stat-combos">—</span>
+      <div class="stat-label">Possibilities</div>
+    </div>
+  </div>
+
+  <!-- Target GPA -->
+  <div class="target-section">
+    <h3>🎯 Target GPA</h3>
+    <div class="target-row">
+      <div class="target-input-wrap">
+        <label style="white-space:nowrap">I want to achieve:</label>
+        <input type="number" id="target-gpa" min="0" max="10" step="0.1" placeholder="e.g. 8.5" oninput="updateTargetIndicator()">
+        <span>/ 10</span>
+      </div>
+      <div class="target-indicator" id="target-indicator"></div>
+    </div>
+    <div class="gpa-progress hidden" id="gpa-progress-wrap">
+      <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-muted)">
+        <span>0</span><span id="progress-label"></span><span>10</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="gpa-progress-bar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grade Scale Reference -->
+  <div class="grade-scale">
+    <h3>Grade Reference (UGC Guidelines)</h3>
+    <div class="scale-items">
+      <div class="scale-item"><div class="scale-dot" style="background:#6ee7b7"></div> O (10) — Outstanding (≥90%)</div>
+      <div class="scale-item"><div class="scale-dot" style="background:#34d399"></div> A+ (9) — Excellent (80-90%)</div>
+      <div class="scale-item"><div class="scale-dot" style="background:#818cf8"></div> A (8) — Very Good (70-80%)</div>
+      <div class="scale-item"><div class="scale-dot" style="background:#a78bfa"></div> B+ (7) — Good (60-70%)</div>
+      <div class="scale-item"><div class="scale-dot" style="background:#fb923c"></div> B (6) — Above Average (50-60%)</div>
+      <div class="scale-item"><div class="scale-dot" style="background:#fbbf24"></div> C (5) — Pass (40-50%)</div>
+      <div class="scale-item"><div class="scale-dot" style="background:#f87171"></div> F (0) — Fail (&lt;40%)</div>
+    </div>
+  </div>
+
+  <!-- Subjects -->
+  <div class="section-title">// Subjects</div>
+  <div class="subjects-grid" id="subjects-grid"></div>
+
+  <!-- Actions -->
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="addSubject()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Subject
+    </button>
+    <button class="btn btn-danger" onclick="resetAll()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
+      Reset
+    </button>
+    <button class="btn btn-calculate" onclick="calculate()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Calculate GPA Possibilities
+    </button>
+  </div>
+
+  <!-- Results -->
+  <div id="results-section" class="results-section hidden"></div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+let subjectCount = 0;
+
+function addSubject(name='', credits='', choices=['','','']) {
+  subjectCount++;
+  const idx = subjectCount;
+  const grid = document.getElementById('subjects-grid');
+
+  const card = document.createElement('div');
+  card.className = 'subject-card';
+  card.id = `subject-${idx}`;
+  card.style.animationDelay = `${(idx-1)*0.05}s`;
+
+  card.innerHTML = `
+    <div class="subject-card-header">
+      <span class="subject-number">SUBJECT ${idx.toString().padStart(2,'0')}</span>
+      <button class="remove-btn" onclick="removeSubject(${idx})" title="Remove">✕</button>
+    </div>
+    <div class="subject-fields">
+      <div class="field-group">
+        <label>Subject Name</label>
+        <input type="text" id="name-${idx}" placeholder="e.g. Data Structures" value="${name}" oninput="updateStats()">
+      </div>
+      <div class="field-group">
+        <label>Credits</label>
+        <input type="number" id="credits-${idx}" placeholder="e.g. 4" min="0.5" max="10" step="0.5" value="${credits}" oninput="updateStats()">
+      </div>
+    </div>
+    <div>
+      <div class="grade-choices-label">
+        Expected Grade (out of 10) &nbsp;<span class="choices-badge">up to 3 choices</span>
+      </div>
+      <div class="grade-choices">
+        <div class="choice-item">
+          <label>Choice 1</label>
+          <input type="number" id="g1-${idx}" min="0" max="10" step="0.5" placeholder="—" value="${choices[0]}" oninput="updateStats()">
+        </div>
+        <div class="choice-item">
+          <label>Choice 2 (optional)</label>
+          <input type="number" id="g2-${idx}" min="0" max="10" step="0.5" placeholder="—" value="${choices[1]}" oninput="updateStats()">
+        </div>
+        <div class="choice-item">
+          <label>Choice 3 (optional)</label>
+          <input type="number" id="g3-${idx}" min="0" max="10" step="0.5" placeholder="—" value="${choices[2]}" oninput="updateStats()">
+        </div>
+      </div>
+    </div>
+  `;
+  grid.appendChild(card);
+  updateStats();
+}
+
+function removeSubject(idx) {
+  const el = document.getElementById(`subject-${idx}`);
+  if (el) {
+    el.style.transition = 'opacity 0.2s, transform 0.2s';
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(20px)';
+    setTimeout(() => { el.remove(); updateStats(); }, 200);
+  }
+}
+
+function getSubjectIds() {
+  return [...document.querySelectorAll('.subject-card')].map(c => c.id.split('-')[1]);
+}
+
+function getSubjectData() {
+  const ids = getSubjectIds();
+  return ids.map(idx => {
+    const name = document.getElementById(`name-${idx}`)?.value.trim() || `Subject ${idx}`;
+    const credits = parseFloat(document.getElementById(`credits-${idx}`)?.value) || 0;
+    const g1 = document.getElementById(`g1-${idx}`)?.value;
+    const g2 = document.getElementById(`g2-${idx}`)?.value;
+    const g3 = document.getElementById(`g3-${idx}`)?.value;
+    const choices = [g1,g2,g3].map(v => v !== '' ? parseFloat(v) : null).filter(v => v !== null);
+    return { name, credits, choices };
+  }).filter(s => s.credits > 0 && s.choices.length > 0);
+}
+
+function updateStats() {
+  const subjects = getSubjectData();
+  const totalCredits = subjects.reduce((a,b) => a + b.credits, 0);
+  const combos = subjects.reduce((a,b) => a * b.choices.length, 1);
+  document.getElementById('stat-subjects').textContent = subjects.length;
+  document.getElementById('stat-credits').textContent = totalCredits;
+  document.getElementById('stat-combos').textContent = subjects.length > 0 ? combos : '—';
+}
+
+function cartesian(arrays) {
+  return arrays.reduce((acc, arr) => {
+    const res = [];
+    acc.forEach(prev => arr.forEach(val => res.push([...prev, val])));
+    return res;
+  }, [[]]);
+}
+
+function calcGPA(subjects, combo) {
+  let totalPoints = 0, totalCredits = 0;
+  subjects.forEach((s, i) => {
+    totalPoints += combo[i] * s.credits;
+    totalCredits += s.credits;
+  });
+  return totalCredits > 0 ? totalPoints / totalCredits : 0;
+}
+
+function gpaClass(gpa) {
+  if (gpa >= 10) return 'gpa-s';
+  if (gpa >= 9) return 'gpa-a';
+  if (gpa >= 8) return 'gpa-b';
+  if (gpa >= 7) return 'gpa-b';
+  if (gpa >= 6) return 'gpa-c';
+  if (gpa >= 5) return 'gpa-d';
+  return 'gpa-f';
+}
+
+function gpaLabel(gpa) {
+  if (gpa >= 10) return 'Outstanding / O';
+  if (gpa >= 9) return 'Excellent / A+';
+  if (gpa >= 8) return 'Very Good / A';
+  if (gpa >= 7) return 'Good / B+';
+  if (gpa >= 6) return 'Above Average / B';
+  if (gpa >= 5) return 'Pass / C';
+  return 'Fail / F';
+}
+
+function calculate() {
+  const subjects = getSubjectData();
+
+  if (subjects.length === 0) {
+    showToast('⚠ Add at least one subject with credits and a grade.');
+    return;
+  }
+
+  const choiceArrays = subjects.map(s => s.choices);
+  const combos = cartesian(choiceArrays);
+
+  // Calculate GPA for each combo
+  const results = combos.map(combo => {
+    const gpa = calcGPA(subjects, combo);
+    return { combo, gpa: Math.round(gpa * 100) / 100 };
+  });
+
+  // Remove duplicates (same GPA), keep unique scenarios
+  const uniqueGPAs = [];
+  const seen = new Set();
+  results.forEach(r => {
+    const key = r.gpa.toFixed(2);
+    if (!seen.has(key)) { seen.add(key); uniqueGPAs.push(r); }
+  });
+
+  uniqueGPAs.sort((a,b) => b.gpa - a.gpa);
+
+  // All combos for stats
+  const allGPAs = results.map(r => r.gpa);
+  const bestGPA = Math.max(...allGPAs);
+  const worstGPA = Math.min(...allGPAs);
+  const avgGPA = Math.round(allGPAs.reduce((a,b)=>a+b,0)/allGPAs.length * 100) / 100;
+
+  renderResults(subjects, uniqueGPAs, bestGPA, worstGPA, avgGPA, combos.length);
+  updateTargetIndicator();
+}
+
+function renderResults(subjects, uniqueGPAs, bestGPA, worstGPA, avgGPA, totalCombos) {
+  const sec = document.getElementById('results-section');
+  sec.classList.remove('hidden');
+
+  // Build HTML
+  let html = `
+    <div class="results-header">
+      <h2>Your GPA Possibilities</h2>
+      <span class="results-count">${uniqueGPAs.length} unique outcome${uniqueGPAs.length!==1?'s':''}</span>
+    </div>
+
+    <div class="summary-card">
+      <span class="big-gpa ${gpaClass(avgGPA)}">${avgGPA.toFixed(2)}</span>
+      <div class="gpa-grade-label">Expected (Average)</div>
+      <div class="summary-range">
+        <div class="range-item">Worst Case<span class="${gpaClass(worstGPA)}">${worstGPA.toFixed(2)}</span></div>
+        <div class="range-item">Average<span class="${gpaClass(avgGPA)}">${avgGPA.toFixed(2)}</span></div>
+        <div class="range-item">Best Case<span class="${gpaClass(bestGPA)}">${bestGPA.toFixed(2)}</span></div>
+      </div>
+      ${avgGPA >= 5 ? `
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);color:var(--accent);font-size:0.9rem">
+          ✓ Passing SGPA Requirement Met (≥5.00)
+        </div>
+      ` : `
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);color:var(--danger);font-size:0.9rem">
+          ⚠ Below Passing SGPA (Requires ≥5.00)
+        </div>
+      `}
+    </div>
+
+    <div class="possibilities-grid">
+  `;
+
+  uniqueGPAs.forEach((r, i) => {
+    const isBest = r.gpa === bestGPA;
+    const isWorst = r.gpa === worstGPA;
+    const cls = isBest ? 'best' : isWorst ? 'worst' : '';
+
+    let breakdownHTML = subjects.map((s, si) => {
+      const grade = r.combo[si];
+      return `<div class="breakdown-row">
+        <span class="subj-name">${s.name}</span>
+        <span class="grade-badge ${gpaClass(grade)}">${grade} × ${s.credits}cr</span>
+      </div>`;
+    }).join('');
+
+    html += `
+      <div class="possibility-card ${cls}" style="animation-delay:${i*0.06}s">
+        <div class="possibility-gpa ${gpaClass(r.gpa)}">${r.gpa.toFixed(2)}</div>
+        <div class="possibility-label">${gpaLabel(r.gpa)}</div>
+        <div class="possibility-breakdown">${breakdownHTML}</div>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+
+  // Percentage conversion (UGC formula)
+  html += `
+    <div class="grade-scale" style="margin-top:24px">
+      <h3>📊 Percentage Equivalent (UGC Formula)</h3>
+      <div style="font-size:0.85rem;color:var(--text-dim);margin-top:10px;line-height:1.6">
+        According to UGC guidelines: <strong>% of Marks = (CGPA - 0.5) × 10</strong>
+        <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+          <div style="background:var(--surface2);padding:12px;border-radius:8px">
+            <span style="color:var(--text-muted);font-size:0.75rem">Best Case</span><br>
+            <strong style="font-size:1.2rem;color:${gpaClass(bestGPA)}">${((bestGPA - 0.5) * 10).toFixed(2)}%</strong>
+          </div>
+          <div style="background:var(--surface2);padding:12px;border-radius:8px">
+            <span style="color:var(--text-muted);font-size:0.75rem">Average</span><br>
+            <strong style="font-size:1.2rem;color:${gpaClass(avgGPA)}">${((avgGPA - 0.5) * 10).toFixed(2)}%</strong>
+          </div>
+          <div style="background:var(--surface2);padding:12px;border-radius:8px">
+            <span style="color:var(--text-muted);font-size:0.75rem">Worst Case</span><br>
+            <strong style="font-size:1.2rem;color:${gpaClass(worstGPA)}">${((worstGPA - 0.5) * 10).toFixed(2)}%</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Extra insights
+  html += `
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <button class="btn btn-secondary" onclick="exportResults()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export Summary
+      </button>
+      <button class="btn btn-secondary" onclick="scrollToTop()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+        Edit Inputs
+      </button>
+    </div>
+  `;
+
+  sec.innerHTML = html;
+
+  // Update progress bar
+  const target = parseFloat(document.getElementById('target-gpa').value);
+  if (!isNaN(target) && target > 0) {
+    document.getElementById('gpa-progress-wrap')?.classList.remove('hidden');
+    const pct = Math.min(avgGPA / 10 * 100, 100);
+    document.getElementById('gpa-progress-bar').style.width = pct + '%';
+    document.getElementById('progress-label').textContent = `${avgGPA.toFixed(2)} avg`;
+  }
+
+  sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function updateTargetIndicator() {
+  const target = parseFloat(document.getElementById('target-gpa').value);
+  const ind = document.getElementById('target-indicator');
+  if (isNaN(target) || !target) { ind.textContent = ''; ind.className = 'target-indicator'; return; }
+
+  const subjects = getSubjectData();
+  if (subjects.length === 0) return;
+
+  const choiceArrays = subjects.map(s => s.choices);
+  const combos = cartesian(choiceArrays);
+  const gpas = combos.map(c => calcGPA(subjects, c));
+  const best = Math.max(...gpas);
+  const achievable = gpas.some(g => g >= target);
+
+  if (achievable) {
+    ind.textContent = `✓ Achievable! Best possible: ${best.toFixed(2)}`;
+    ind.className = 'target-indicator met';
+  } else {
+    ind.textContent = `✗ Not achievable. Max possible: ${best.toFixed(2)}`;
+    ind.className = 'target-indicator not-met';
+  }
+}
+
+function exportResults() {
+  const subjects = getSubjectData();
+  if (subjects.length === 0) { showToast('Nothing to export yet.'); return; }
+
+  const choiceArrays = subjects.map(s => s.choices);
+  const combos = cartesian(choiceArrays);
+  const results = combos.map(combo => {
+    const gpa = calcGPA(subjects, combo);
+    return { gpa: Math.round(gpa*100)/100, combo };
+  });
+  const sorted = [...new Set(results.map(r => r.gpa))].sort((a,b)=>b-a);
+
+  let text = `GPA COMPASS — SEMESTER REPORT\n${'='.repeat(40)}\n\n`;
+  text += `Subjects:\n`;
+  subjects.forEach(s => { text += `  • ${s.name}: ${s.credits} credits, choices: ${s.choices.join(' / ')}\n`; });
+  text += `\nGPA Possibilities:\n`;
+  sorted.forEach(gpa => { text += `  ${gpa.toFixed(2)} — ${gpaLabel(gpa)}\n`; });
+  const gpas = results.map(r=>r.gpa);
+  text += `\nRange: ${Math.min(...gpas).toFixed(2)} – ${Math.max(...gpas).toFixed(2)}\n`;
+  text += `Average: ${(gpas.reduce((a,b)=>a+b,0)/gpas.length).toFixed(2)}\n`;
+
+  const blob = new Blob([text], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'gpa-possibilities.txt';
+  a.click();
+  showToast('✓ Report downloaded!');
+}
+
+function resetAll() {
+  document.getElementById('subjects-grid').innerHTML = '';
+  document.getElementById('results-section').innerHTML = '';
+  document.getElementById('results-section').classList.add('hidden');
+  subjectCount = 0;
+  addSubject(); addSubject(); addSubject();
+  updateStats();
+  showToast('Reset complete.');
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// Init: start with 3 subjects
+addSubject();
+addSubject();
+addSubject();
+</script>
+</body>
+</html>
